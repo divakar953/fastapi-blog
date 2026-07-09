@@ -1,11 +1,12 @@
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-# this app object is what we will be using to define all of our routes
 app = FastAPI()
-# FastAPI uses decorators for routes.
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# list of dictionaries, where each dictionary is a post
+templates = Jinja2Templates(directory="templates")
+
 posts: list[dict] = [
     {
         "id": 1,
@@ -22,17 +23,12 @@ posts: list[dict] = [
         "date_posted": "July 12, 2025"
     }
 ]
-# this 'posts' will be replaced by a proper database later
 
-# home route that responds to get request at the root URL
-@app.get("/", response_class=HTMLResponse, include_in_schema=False)
-@app.get("/posts", response_class=HTMLResponse, include_in_schema=False) # we can stack decorators as such. and they will execute the same fuction home()
-def home():
-    return f"<h1>{posts[0]['title']}</h1>"
-    #return {"message": "Hello World"} # fastapi will automatically convert this dictonary with just a single value to JSON
-# we are decorating a function called home with app.get() decorator and the path is '/' for the root
+@app.get("/", include_in_schema=False, name="home")
+@app.get("/posts", include_in_schema=False, name="posts")
+def home(request: Request):
+    return templates.TemplateResponse(request, "home.html", {"posts": posts, "title": "Home"})
 
 @app.get("/api/posts")
 def get_posts():
     return posts
-#fastapi will automatically convert this list of dictionaries to a JSON array
