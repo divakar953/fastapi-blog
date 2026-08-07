@@ -116,7 +116,7 @@ async def forgot_password(
 
         token = generate_reset_token()
         token_hash = hash_reset_token(token)
-        expires_at = datetime.now(UTC) + timedelta(
+        expires_at = datetime.now(timezone.utc) + timedelta(
             minutes=settings.reset_token_expire_minutes
         )
 
@@ -159,7 +159,7 @@ async def reset_password(
             detail="Invalid or expired reset token",
         )
 
-    if reset_token.expires_at.replace(tzinfo=UTC) < datetime.now(UTC):
+    if reset_token.expires_at < datetime.now(timezone.utc):
         await db.delete(reset_token)
         await db.commit()
         raise HTTPException(
